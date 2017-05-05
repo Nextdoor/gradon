@@ -1,0 +1,17 @@
+dependencies:
+  cache_directories:
+    - .tox/py27
+  post:
+    # Install tox requirements during the dependency phase
+    - tox --notest
+    - .tox/py27/bin/pip install -r requirements.txt
+
+test:
+  post:
+    - git config --global user.email "you@example.com"
+    - git config --global user.name "Your Name"
+    - pip install -e .
+    - git clone ${CIRCLE_REPOSITORY_URL} repo
+    - radonate -d repo ${CIRCLE_ARTIFACTS}/radonate-test
+    - gradon -d csv repo ${CIRCLE_ARTIFACTS}/gradon.csv
+    - python sample/sum_deltas.py ${CIRCLE_ARTIFACTS}/gradon.csv SUBTREE_TOTAL > ${CIRCLE_ARTIFACTS}/deltas.txt
