@@ -67,13 +67,13 @@ def _remove_scoreless_diffs(diffs, cruft_scores):
         lines_by_method[method].append(line)
 
     for line in diffs:
-        plus_minus, method, grade = parse_diff_line(line)
+        _, method, grade = parse_diff_line(line)
 
         # Skip non-scoring grades where there is no matching change from a scoring grade
         if grade not in scoring_grades:
             opposite_line = next((l for l in lines_by_method[method] if l != line), None)
             if opposite_line:
-                opposite_plus_minus, _, opposite_grade = parse_diff_line(line)
+                _, _, opposite_grade = parse_diff_line(opposite_line)
                 if opposite_grade not in scoring_grades:
                     continue
             else:
