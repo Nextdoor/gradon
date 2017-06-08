@@ -15,6 +15,7 @@ log = logging.getLogger(__name__)
 @click.argument('first', nargs=1, required=False, metavar='commit')
 @click.argument('last', nargs=1, required=False, metavar='commit')
 @click.option('--all', is_flag=True, help="Show all stats")
+@click.option('--all-grades', is_flag=True, help="Only show grades affecting the score")
 @click.option('--filter', '-F', 'filters', multiple=True,
               help=('Report only for changes to files matching this artifact. '
                     'Default is to show just stats changes for entire tree'))
@@ -36,6 +37,6 @@ def command(ctx, first=None, last=None, paths=None, **options):
             filters=options['filters'] or filters)
 
         shared.print_stats(stats_iter, source_repo, stats_fs, ctx.obj['cruft_scores'],
-                           all=options['all'], name_map=filters)
+                           all=options['all'], name_map=filters, all_grades=options['all_grades'])
     finally:
         shutil.rmtree(cache_path)

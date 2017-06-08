@@ -5,6 +5,7 @@ try:
 except ImportError:
     import contextlib
 
+import collections
 import difflib
 import functools
 import logging
@@ -54,8 +55,35 @@ def git_log_args(f):
     return wrapper
 
 
+def _remove_scoreless_diffs(diffs, cruft_scores):
+    def parse_diff_line(line):
+        return re.search(r'([+-])\s+(.*):\s+([ABCDEF])\s+\*\s+\d+$', line).groups()
+
+    scoring_grades = set(g for g in 'ABCDEF' if cruft_scores[g])
+
+    lines_by_method = collections.defaultdict(list)
+    for line in diffs:
+        _, method, _ = parse_diff_line(line)
+        lines_by_method[method].append(line)
+
+    for line in diffs:
+        plus_minus, method, grade = parse_diff_line(line)
+
+        # Skip non-scoring grades where there is no matching change from a scoring grade
+        if grade not in scoring_grades:
+            opposite_line = next((l for l in lines_by_method[method] if l != line), None)
+            if opposite_line:
+                opposite_plus_minus, _, opposite_grade = parse_diff_line(line)
+                if opposite_grade not in scoring_grades:
+                    continue
+            else:
+                continue
+
+        yield line
+
+
 def _print_individual_stats(s, source_repo, stats_fs, cruft_scores, all=False, show_header=False,
-                            name_map=None, print_original_commit=False):
+                            name_map=None, print_original_commit=False, all_grades=False):
     name_map = name_map or {}
     if show_header:
         if print_original_commit:
@@ -105,8 +133,13 @@ def _print_individual_stats(s, source_repo, stats_fs, cruft_scores, all=False, s
         def diff_only(diffs):
             return filter(lambda s: not s.startswith(' ') and not s.startswith('?'), diffs)
 
-        print('\n'.join(diff_only(difflib.ndiff(
-            sorted(prev), sorted(current)))))
+        diffs = diff_only(difflib.ndiff(sorted(prev), sorted(current)))
+
+        # Remove grade that don't affect scores
+        if not all_grades:
+            diffs = list(_remove_scoreless_diffs(diffs, cruft_scores))
+
+        print('\n'.join(diffs))
 
     name = s.filename
     for pat, value in name_map.items():
@@ -128,7 +161,7 @@ def _print_individual_stats(s, source_repo, stats_fs, cruft_scores, all=False, s
 
 
 def print_stats(stats_iter, source_repo, stats_fs, cruft_scores, all=False, name_map=None,
-                print_original_commit=False):
+                print_original_commit=False, all_grades=False):
     prev_commit = None
     stats = None
     for stats in stats_iter:
@@ -137,7 +170,7 @@ def print_stats(stats_iter, source_repo, stats_fs, cruft_scores, all=False, name
             print()
         _print_individual_stats(stats, source_repo, stats_fs, cruft_scores,
                                 all=all, name_map=name_map, show_header=show_header,
-                                print_original_commit=print_original_commit)
+                                print_original_commit=print_original_commit, all_grades=all_grades)
         prev_commit = stats.commit
 
     if stats:

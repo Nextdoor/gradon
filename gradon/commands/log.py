@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 
 @shared.git_log_args
 @click.option('--all', is_flag=True, help="Show all stats")
+@click.option('--all-grades', is_flag=True, help="Only show grades affecting the score")
 @click.option('--force', '-f', is_flag=True, help="Force refresh of cache")
 @click.option('--reverse', '-r', is_flag=True, help="Reverse order (default is newest first)")
 @click.option('--filter', '-F', 'filters', multiple=True,
@@ -44,6 +45,7 @@ def command(ctx, rev_range=None, paths=(), **options):
             filters=options['filters'] or filters)
 
         shared.print_stats(stats_iter, source_repo, stats_fs, ctx.obj['cruft_scores'],
-                           all=options['all'], name_map=filters, print_original_commit=True)
+                           all=options['all'], name_map=filters, print_original_commit=True,
+                           all_grades=options['all_grades'])
     finally:
         shutil.rmtree(cache_path)
