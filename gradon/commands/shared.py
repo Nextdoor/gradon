@@ -128,8 +128,6 @@ def _print_individual_stats(s, source_repo, stats_fs, cruft_scores, all=False, s
                 if not diff.deleted_file:  # new is a delete because we're comparing backwards
                     prev.extend(get_method_list(diff.a_path, prev_commit_hexsha))
 
-        print('METHOD DIFFS:')
-
         def diff_only(diffs):
             return filter(lambda s: not s.startswith(' ') and not s.startswith('?'), diffs)
 
@@ -139,7 +137,15 @@ def _print_individual_stats(s, source_repo, stats_fs, cruft_scores, all=False, s
         if not all_grades:
             diffs = list(_remove_scoreless_diffs(diffs, cruft_scores))
 
-        print('\n'.join(diffs))
+        if all_grades:
+            print('METHOD DIFFS:')
+        else:
+            print('METHOD DIFFS (affecting score):')
+
+        if diffs:
+            print('\n'.join(diffs))
+        else:
+            print('  None')
 
     name = s.filename
     for pat, value in name_map.items():
