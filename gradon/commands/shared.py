@@ -206,7 +206,7 @@ def _page_output(skip):
         yield
         return
 
-    terminal_settings = subprocess.check_output(['stty', '-g'])
+    terminal_settings = subprocess.check_output(['stty', '-g']).strip()
     try:
         pipe_rd, pipe_wr = os.pipe()
         pager = subprocess.Popen(['less', '-F', '-R', '-S', '-X', '-K'],
