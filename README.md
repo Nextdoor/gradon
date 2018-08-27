@@ -23,7 +23,7 @@ code base.
 
 ## Running gradon
 
-First install gradon with `pip install gradon`.  The run `gradon log` and see how your repo has
+Clone the repo and run `python setup.py install`.  The run `gradon log` and see how your repo has
 evolved.
 
 For deeper analysis, the `gradon csv` command can be used to generate raw output per changed file
